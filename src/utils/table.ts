@@ -1,4 +1,4 @@
-import db from './db'; 
+import db from './db';
 export const createTables = async () => {
     try {
         // Users table
@@ -25,6 +25,20 @@ export const createTables = async () => {
                 FOREIGN KEY (user_id) REFERENCES users(id) ON DELETE CASCADE
             );
         `);
+
+        // bookings table
+        await db.query(`
+            CREATE TABLE IF NOT EXISTS bookings (
+                id INT AUTO_INCREMENT PRIMARY KEY,
+                user_id INT NOT NULL,
+                speaker_id INT NOT NULL,
+                slot INT NOT NULL,
+                booking_date DATE NOT NULL,
+                FOREIGN KEY (user_id) REFERENCES users(id),
+                FOREIGN KEY (speaker_id) REFERENCES speakers(id),
+                UNIQUE (speaker_id, slot, booking_date)
+            );
+            `)
 
         console.log('Tables initialized successfully.');
     } catch (error) {

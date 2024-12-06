@@ -18,14 +18,12 @@ export const verifyToken = (req:Request,res:Response, next: NextFunction) =>{
   }
   const token = authHeader.split(" ")[1];
   try {
-    const decoded = jwt.verify(token,JWT_SECRET);
-    console.log("inside the verifyToken function");
-    console.log(decoded);
+    const decoded = jwt.verify(token,JWT_SECRET)  as { id: string; email: string; user_type: string };
     req.user = decoded;
     next();
   } catch (error) {
     console.log(error);
-    res.status(403).json({message:"invlaid or expired token"});
+    res.status(403).json(error);
   }
 }
 
@@ -38,11 +36,10 @@ export const verifyRole = (allowedRoles: string[]) => {
         }
 
         const token = authHeader.split(" ")[1];
-
+  
         try {
             const decoded = jwt.verify(token, JWT_SECRET) as { id: string; email: string; user_type: string };
 
-            
             if (!allowedRoles.includes(decoded.user_type)) {
                 return res.status(403).json({ message: "You do not have permission to access this route" });
             }
