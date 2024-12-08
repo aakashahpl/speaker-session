@@ -13,8 +13,7 @@ const app = express();
 import { sendMail } from "./utils/mailservice";
 
 
-// initialize MySql tables if they don't exist in database
-// createTables();
+
 
 const corsOptions = {
     origin: '*',
@@ -34,6 +33,8 @@ app.get("/test",async(req,res)=>{
 })
 
 connectToDB();
+// initialize MySql tables if they don't exist in database
+// createTables();
 
 const PORT = process.env.PORT||3000;
 app.listen(PORT,()=>{

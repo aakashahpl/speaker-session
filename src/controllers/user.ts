@@ -3,8 +3,11 @@ import bcrypt from 'bcrypt';
 import validator from 'validator';
 import jwt from 'jsonwebtoken';
 import db from '../utils/db'; 
+import crypto from 'crypto';
 import { RowDataPacket } from 'mysql2';
 import dotenv from "dotenv";
+import { sendMail } from '../utils/mailservice';
+import { generateOtp,generateOtpHash } from '../utils/otp';
 dotenv.config();
 
 const JWT_SECRET = process.env.JWT_SECRET;
@@ -42,6 +45,10 @@ export const signup = async (req: Request, res: Response) => {
         );
 
         const userId = (result as any).insertId;
+        
+        // send otp for email verification and include the hash in the response
+
+        const { hash, expiresAt } = await generateOtp(email); 
 
         res.status(201).json({
             message: 'User registered successfully',
@@ -51,7 +58,11 @@ export const signup = async (req: Request, res: Response) => {
                 last_name,
                 email,
                 user_type,
-                is_verified: false
+                is_verified: false,
+            },
+            otp: {
+                hash, 
+                expiresAt, 
             }
         });
     } catch (error) {
@@ -91,6 +102,38 @@ export const login = async (req: Request, res: Response) => {
         }
     } catch (error) {
         console.error('Error during login:', error);
+        res.status(500).json({ message: 'Server error' });
+    }
+};
+
+
+
+
+export const verifyOtpHandler = async (req: Request, res: Response) => {
+    const { email, otp, hash, expiresAt } = req.body;
+
+    if (!email || !otp || !hash || !expiresAt) {
+        return res.status(400).json({ message: 'Email, OTP, hash, and expiration time are required' });
+    }
+
+    try {
+        const calculatedHash = generateOtpHash(otp);
+
+        if (calculatedHash !== hash) {
+            return res.status(400).json({ message: 'Invalid OTP' });
+        }
+
+        if (Date.now() > expiresAt) {
+            return res.status(400).json({ message: 'OTP has expired' });
+        }
+
+        const [result] = await db.query(
+            'Update table users set is_verified = true where email = ?',
+            [email]
+        );
+
+        res.status(200).json({ message: 'OTP verified successfully' });
+    } catch (error) {
         res.status(500).json({ message: 'Server error' });
     }
 };
