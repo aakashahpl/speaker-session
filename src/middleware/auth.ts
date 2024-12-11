@@ -1,6 +1,7 @@
 import jwt from 'jsonwebtoken';
 import dotenv from 'dotenv';
 import { Request, Response, NextFunction } from 'express';
+import { PublicUser } from '../model/user';
 
 dotenv.config();
 const JWT_SECRET = process.env.JWT_SECRET;
@@ -38,13 +39,13 @@ export const verifyRole = (allowedRoles: string[]) => {
         const token = authHeader.split(" ")[1];
   
         try {
-            const decoded = jwt.verify(token, JWT_SECRET) as { id: string; email: string; user_type: string };
+            const decoded = jwt.verify(token, JWT_SECRET) as { id: number; email: string; user_type: string };
 
             if (!allowedRoles.includes(decoded.user_type)) {
                 return res.status(403).json({ message: "You do not have permission to access this route" });
             }
 
-            req.user = { id: decoded.id, email: decoded.email, user_type: decoded.user_type };
+            req.user = { id: decoded.id, email: decoded.email, user_type: decoded.user_type } as PublicUser;
 
             next();
         } catch (error) {

@@ -1,18 +1,15 @@
 import express from "express";
 import bodyParser from "body-parser";
 import {connectToDB} from "./utils/db";
-import route1 from "./api/user";
-import route2 from "./api/speaker"
-import route3 from "./api/booking";
+import userRoute from "./route/user";
+import speakerRoute from "./route/speaker"
+import bookingRoute from "./route/booking";
 import { createTables } from "./utils/table";
 import cors from "cors";
 import path from "path";
 import dotenv from "dotenv";
 dotenv.config();
 const app = express();
-import { sendMail } from "./utils/mailservice";
-
-
 
 
 const corsOptions = {
@@ -21,20 +18,22 @@ const corsOptions = {
   };
 
 app.use(cors(corsOptions));
-
 app.use(bodyParser.urlencoded({ extended: true }));
 app.use(express.json());
-app.use("/",route1);
-app.use("/speaker",route2);
-app.use("/booking",route3);
 
 app.get("/test",async(req,res)=>{
-    res.send("api working correctly");
+    res.send("API working");
 })
+app.use("/",userRoute);
+app.use("/speaker",speakerRoute);
+app.use("/booking",bookingRoute);
+
 
 connectToDB();
+
 // initialize MySql tables if they don't exist in database
-// createTables();
+createTables();
+
 
 const PORT = process.env.PORT||3000;
 app.listen(PORT,()=>{

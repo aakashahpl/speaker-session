@@ -4,8 +4,8 @@ import {newProfile, getAllSpeakers} from '../controllers/speaker';
 
 const router = Router();
 
-router.post('/profile',verifyRole(['speaker']), newProfile);
+router.post('/create-profile',verifyRole(['speaker']), newProfile);
 
-router.get('/fetch',verifyToken,getAllSpeakers);
+router.get('/fetch-all',verifyToken,getAllSpeakers);
 
 export default router;

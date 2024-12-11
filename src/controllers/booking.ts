@@ -4,6 +4,7 @@ import { sendMail } from '../utils/mailservice';
 import { createEvent } from '../utils/calendarService';
 
 
+
 export const bookSlot = async (req: Request, res: Response) => {
     const { speaker_id, slot, booking_date } = req.body;
     const user = req.user as { id: number; email: string; user_type: string };
@@ -45,8 +46,6 @@ export const bookSlot = async (req: Request, res: Response) => {
             [speaker_id]
         );
 
-        // console.log(speakerData);
-
         const speakerEmail = speakerData[0].email;
         const speakerName = speakerData[0].first_name;
 
@@ -59,22 +58,14 @@ export const bookSlot = async (req: Request, res: Response) => {
         // sendMail(user.email,subject,userHtml);
         // sendMail(speakerMail,subject,speakerHtml);
 
-        const timeZoneOffset = "+05:30"; // Time zone offset
-
-        // Calculate the hour based on the slot number
+        const timeZoneOffset = "+05:30"; 
         const starthour = 8 + (slot);
-    
-        // Parse the date to a JavaScript Date object
         const parsedDate = new Date(booking_date);
-        parsedDate.setHours(starthour, 0, 0, 0); // Set the calculated time
-    
-        // Format the date-time string
+        parsedDate.setHours(starthour, 0, 0, 0); 
         const startDateTime = parsedDate.toISOString().replace("Z", timeZoneOffset);
-        
-        parsedDate.setHours(starthour+1, 0, 0, 0); // Set the calculated time
+        parsedDate.setHours(starthour+1, 0, 0, 0); 
         const endDateTime = parsedDate.toISOString().replace("Z", timeZoneOffset);
 
-        //send google calendar invites 
         const eventDetails = {
             location:"online",
             summary:"Tech talk",
@@ -90,10 +81,54 @@ export const bookSlot = async (req: Request, res: Response) => {
         }
         createEvent(eventDetails);
 
-        res.status(201).json({ message: 'Slot booked successfully.' });
+        return res.status(201).json({ message: 'Slot booked successfully.' });
     } catch (error) {
         console.error('Error booking slot:', error);
-        res.status(500).json({ message: 'Server error. Please try again later.' });
+        return res.status(500).json({ message: 'Server error. Please try again later.' });
     }
 };
 
+
+
+export const speakerBookings = async (req: Request, res: Response) => {
+
+    const speaker = req.user as { id: number; email: string; user_type: string };
+
+    const speakerId = speaker.id;
+    
+    console.log(speakerId);
+
+    if(!speakerId){
+
+        return res.status(400).json({ message: 'Speaker ID is required.' });
+
+    }
+    try {
+        const [user_id] = await pool.query('select id from speakers where user_id = ?',[speakerId]);
+        const [data] = await pool.query('select * from bookings where speaker_id = ?',[user_id[0].id]);
+        return res.status(200).json({message:"data fetched successfully",data});
+    } catch (error) {
+        console.log(error);
+        return res.status(500).json({ message: 'Server error. Please try again later.' });
+    }
+
+}
+
+export const freeSlots = async (req: Request, res: Response) => {
+    const speakerId = req.params.speakerId;
+    const date = req.query.date;
+    if(!date|| !speakerId){
+        return res.status(400).json({
+            message:"date and speakerId are required"
+        })
+    }
+    try {
+
+        const [data] = await pool.query('select slot from bookings where speaker_id= ? and date=?',[speakerId,date]);
+
+        return res.send(200).json({message:"data fetched successfully",data}); 
+    } catch (error) {
+        return res.status(500).json({ message: 'Server error. Please try again later.' });
+    }
+
+}
