@@ -1,7 +1,6 @@
 const { google } = require('googleapis');
 const key = require(process.env.GOOGLE_SERVICE_ACCOUNT_KEY_FILE); // Path to your service account key file
 
-// Define the scope for the calendar API
 const SCOPES = ['https://www.googleapis.com/auth/calendar'];
 
 
@@ -45,17 +44,18 @@ export async function createEvent(eventDetails:EventDetails) {
             dateTime: eventDetails.end.dateTime,
             timeZone: 'Asia/Kolkata',
         },
-        // attendees: [
-        //     {email: eventDetails.userEmail },
-        //     {email: eventDetails.speakerEmail}
+        attendees: [
+            {email: eventDetails.userEmail },
+            {email: eventDetails.speakerEmail}
 
-        // ],
+        ],
     };
 
     try {
         const response = await calendar.events.insert({
             calendarId: 'primary', 
             resource: event,
+            sendUpdates: 'all' 
             
         });
         console.log('Event created:', response.data.htmlLink);
