@@ -115,20 +115,36 @@ export const speakerBookings = async (req: Request, res: Response) => {
 }
 
 export const freeSlots = async (req: Request, res: Response) => {
-    const speakerId = req.params.speakerId;
+    const speakerId = req.query.speakerId;
     const date = req.query.date;
-    if(!date|| !speakerId){
+
+    if (!date || !speakerId) {
         return res.status(400).json({
-            message:"date and speakerId are required"
-        })
+            message: "date and speakerId are required"
+        });
     }
+
     try {
+        const [data]: any[] = await pool.query(
+            'select slot from bookings where speaker_id= ? and booking_date=?',
+            [speakerId, date]
+        );
 
-        const [data] = await pool.query('select slot from bookings where speaker_id= ? and date=?',[speakerId,date]);
+        const slots = [1, 2, 3, 4, 5, 6, 7];
 
-        return res.send(200).json({message:"data fetched successfully",data}); 
+        const bookedSlots = data.map((entry: { slot: number }) => entry.slot);
+
+        // Filter out the booked slots from the slots array
+        const freeSlots = slots.filter(slot => !bookedSlots.includes(slot));
+
+        return res.status(200).json({
+            message: "free slots fetched successfully",
+            date,
+            free_slots: freeSlots,
+            booked_slots: data
+        });
     } catch (error) {
+        console.log(error);
         return res.status(500).json({ message: 'Server error. Please try again later.' });
     }
-
 }

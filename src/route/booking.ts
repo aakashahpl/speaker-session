@@ -8,6 +8,6 @@ router.post('/create',verifyRole(['user']),bookSlot);
 
 router.get('/fetch',verifyRole(['speaker']),speakerBookings);
 
-router.get('/free-slots/:speakerId',verifyRole(['speaker','user']),freeSlots);
+router.get('/free-slots',verifyRole(['speaker','user']),freeSlots);
 
 export default router;
