@@ -55,8 +55,8 @@ export const bookSlot = async (req: Request, res: Response) => {
         const booking_time = (8+slot);
         const userHtml = `<div>Your booking with speaker ${speakerName} is confirmed on ${booking_date} from ${booking_time}:00 to ${booking_time+1}:00.</div>`
         const speakerHtml = `<div>Your have a booking on ${booking_date} from ${booking_time}:00 to ${booking_time+1}:00. <br> You can contact the client using the following email. <br>${user.email}</div>`
-        // sendMail(user.email,subject,userHtml);
-        // sendMail(speakerMail,subject,speakerHtml);
+        sendMail(user.email,subject,userHtml);
+        sendMail(speakerEmail,subject,speakerHtml);
 
         const timeZoneOffset = "+05:30"; 
         const starthour = 8 + (slot);
@@ -125,9 +125,11 @@ export const freeSlots = async (req: Request, res: Response) => {
     }
 
     try {
+
+        const [user_id] = await pool.query('select id from speakers where user_id = ?',[speakerId]);
         const [data]: any[] = await pool.query(
             'select slot from bookings where speaker_id= ? and booking_date=?',
-            [speakerId, date]
+            [user_id[0].id, date]
         );
 
         const slots = [1, 2, 3, 4, 5, 6, 7];
